@@ -60,6 +60,11 @@ jobs:
           git add reports/ docs/index.md \
                   Computrabajo_Narino/Offer/ \
                   Magneto_Narino/offers/
-          git diff --cached --quiet && echo "Sin cambios nuevos." || \
+          if git diff --cached --quiet; then
+            echo "Sin cambios nuevos. No se hace commit."
+          else
             git commit -m "chore: reporte diario $(date +'%Y-%m-%d %H:%M UTC')"
-          git push
+            # Sincronizar con el remoto antes de hacer push (evita el error "fetch first")
+            git pull --rebase origin main
+            git push origin main
+          fi
