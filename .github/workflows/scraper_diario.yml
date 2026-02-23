@@ -57,9 +57,12 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add reports/ docs/index.md \
-                  Computrabajo_Narino/Offer/ \
-                  Magneto_Narino/offers/
+          # Agregar todos los cambios (nuevos archivos, modificados y eliminados)
+          # Incluye carpetas de ofertas aunque estén vacías tras el scraping
+          git add -A reports/ docs/index.md \
+                     Computrabajo_Narino/Offer/ \
+                     Magneto_Narino/offers/ \
+                     || true
           if git diff --cached --quiet; then
             echo "Sin cambios nuevos. No se hace commit."
           else
