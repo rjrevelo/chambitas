@@ -6,6 +6,10 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:   # Permite ejecutar manualmente desde la pestaña Actions de GitHub
 
+# Permisos necesarios para que github-actions[bot] pueda hacer push
+permissions:
+  contents: write
+
 jobs:
   scrape-and-report:
     runs-on: ubuntu-latest
@@ -14,6 +18,8 @@ jobs:
       # ── 1. Descargar el código del repositorio ──────────────────────────────
       - name: 📥 Checkout del repositorio
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # ── 2. Configurar Python ────────────────────────────────────────────────
       - name: 🐍 Configurar Python 3.12
