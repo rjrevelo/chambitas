@@ -1,0 +1,59 @@
+name: 🤖 Scrapers diarios — Tu Chambita
+
+on:
+  schedule:
+    # Todos los días a las 00:00 UTC = 7:00 PM (19:00) hora Colombia (UTC-5)
+    - cron: "0 0 * * *"
+  workflow_dispatch:   # Permite ejecutar manualmente desde la pestaña Actions de GitHub
+
+jobs:
+  scrape-and-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Descargar el código del repositorio ──────────────────────────────
+      - name: 📥 Checkout del repositorio
+        uses: actions/checkout@v4
+
+      # ── 2. Configurar Python ────────────────────────────────────────────────
+      - name: 🐍 Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # ── 3. Instalar dependencias de ambos scrapers ──────────────────────────
+      - name: 📦 Instalar dependencias
+        run: |
+          pip install --upgrade pip
+          pip install -r Computrabajo_Narino/requirements.txt
+          pip install -r Magneto_Narino/requirements.txt
+
+      # ── 4. Ejecutar scrapers + generador de reporte ─────────────────────────
+      - name: 🕷️ Ejecutar scrapers y generar reporte
+        run: python run_all.py
+
+      # ── 5. Copiar el último reporte como docs/index.md (GitHub Pages) ───────
+      - name: 📄 Publicar reporte en docs/index.md
+        run: |
+          mkdir -p docs
+          LATEST=$(ls -t reports/reporte_ofertas_*.md 2>/dev/null | head -1)
+          if [ -n "$LATEST" ]; then
+            cp "$LATEST" docs/index.md
+            echo "Reporte copiado: $LATEST -> docs/index.md"
+          else
+            echo "⚠️  No se encontró ningún reporte generado."
+            exit 1
+          fi
+
+      # ── 6. Hacer commit y push de los cambios ───────────────────────────────
+      - name: 🚀 Commit y push del reporte
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/ docs/index.md \
+                  Computrabajo_Narino/Offer/ \
+                  Magneto_Narino/offers/
+          git diff --cached --quiet && echo "Sin cambios nuevos." || \
+            git commit -m "chore: reporte diario $(date +'%Y-%m-%d %H:%M UTC')"
+          git push
